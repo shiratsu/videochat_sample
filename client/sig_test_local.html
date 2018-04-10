@@ -101,14 +101,23 @@ local signaling
         // 録画が終了したタイミングで呼び出される
         console.log("send data");  
         console.log(evt.data.type);  
-        var videoBlob = new Blob([evt.data], { type: evt.data.type });
-        ws.binaryType = 'blob';
+        let videoBlob = new Blob([evt.data], { type: evt.data.type });
+                
         ws.send(videoBlob);
     }
  
    
     // 録画開始
     recorder.start();
+  }
+
+  function large_buffer_to_string(buf) {
+    var tmp = [];
+    var len = 1024;
+    for (var p = 0; p < buf.byteLength; p += len) {
+        tmp.push(buffer_to_string(buf.slice(p, p + len)));
+    }
+    return tmp.join("");
   }
  
   // 録画停止
