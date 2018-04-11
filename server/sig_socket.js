@@ -17,6 +17,13 @@ videoChat = io.sockets.on('connection', function(socket) {
   console.log(socket.handshake);
   console.log(socket.head);
 
+  // 入室
+  socket.on('enter', function(roomname) {
+    socket.set('roomname', roomname);
+    socket.join(roomname);
+  });
+
+
   socket.on('message', function(message) {
     console.log(message);
     console.log(message.type);
@@ -31,15 +38,28 @@ videoChat = io.sockets.on('connection', function(socket) {
             }
         });
     }else{
-        
-      socket.broadcast.emit('message', message);
+        emitMessage('message', message);
     }
   });
- 
+
   socket.on('disconnect', function() {
-    socket.broadcast.emit('user disconnected');
+      emitMessage('user disconnected');
   });
 });
+
+// 会議室名が指定されていたら、室内だけに通知
+function emitMessage(type, message) {
+  var roomname;
+  socket.get('roomname', function(err, _room) {  roomname = _room;  });
+
+  if (roomname) {  
+      socket.broadcast.to(roomname).emit(type, message);
+  }
+  else {   
+      socket.broadcast.emit(type, message);   
+  }
+}
+
 
 /**
  * 日付をフォーマットする

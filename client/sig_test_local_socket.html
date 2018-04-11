@@ -47,7 +47,6 @@
   let peerStarted = false;
   let mediaConstraints = {'mandatory': {'OfferToReceiveAudio':false, 'OfferToReceiveVideo':true }};
 
-  
   // ---- socket ------
   // create socket
   var socketReady = false;
@@ -81,12 +80,12 @@
 
   
   // ----------------- handshake --------------
-  var textForSendSDP = document.getElementById('text-for-send-sdp');
-  var textForSendICE = document.getElementById('text-for-send-ice');
-  var textToReceiveSDP = document.getElementById('text-for-receive-sdp');
-  var textToReceiveICE = document.getElementById('text-for-receive-ice');
-  var iceSeparator = '------ ICE Candidate -------';
-  var CR = String.fromCharCode(13);
+  let textForSendSDP = document.getElementById('text-for-send-sdp');
+  let textForSendICE = document.getElementById('text-for-send-ice');
+  let textToReceiveSDP = document.getElementById('text-for-receive-sdp');
+  let textToReceiveICE = document.getElementById('text-for-receive-ice');
+  let iceSeparator = '------ ICE Candidate -------';
+  let CR = String.fromCharCode(13);
   
   function onSDP() {
     var text = textToReceiveSDP.value;
@@ -120,7 +119,6 @@
     recorder.ondataavailable = function(evt) {
         // 録画が終了したタイミングで呼び出される
         console.log("send data");  
-        console.log(evt.data.type);  
         let videoBlob = new Blob([evt.data], { type: evt.data.type });
         let message = {data:videoBlob,type:'binary',datatype:evt.data.type}        
         socket.send(message);
@@ -131,7 +129,27 @@
     recorder.start();
   }
 
- 
+  // room関連
+  function onOpened(evt) {
+    console.log('socket opened.');
+    socketReady = true;
+
+    var roomname = getRoomName(); // 会議室名を取得する
+    socket.emit('enter', roomname);
+  }
+
+  function getRoomName() { // たとえば、 URLに  ?roomname  とする
+    var url = document.location.href;
+    var args = url.split('?');
+    if (args.length > 1) {
+        var room = args[1];
+        if (room != "") {
+        return room;
+        }
+    }
+    return "_defaultroom";
+  }
+
   // 録画停止
   function stopRecording() {
     console.log("stop record");  
@@ -188,15 +206,8 @@
     function (stream) { // success
       localStream = stream;
       
-      if ('srcObject' in localVideo) {
-         localVideo.srcObject = stream;
-      }
-      else {
-         localVideo.src = window.URL.createObjectURL(stream);
-      }
-
+      playVideo(localVideo,stream);  
       localVideo.play();
-	  localVideo.volume = 0;
     },
     function (error) { // error
       console.error('An error occurred: [CODE ' + error.code + ']');
@@ -204,6 +215,16 @@
     }
 	);
   }
+
+  function playVideo(element,stream){
+      if ('srcObject' in element) {
+         element.srcObject = stream;
+      }
+      else {
+         element.src = window.URL.createObjectURL(stream);
+      }
+	  element.volume = 0;
+  }    
 
   // stop local video
   function stopVideo() {
@@ -257,12 +278,7 @@
     // when remote adds a stream, hand it on to the local video element
     function onRemoteStreamAdded(event) {
       console.log("Added remote stream");
-      if ('srcObject' in remoteVideo) {
-        remoteVideo.srcObject = event.stream;
-      }
-      else {
-        remoteVideo.src = window.URL.createObjectURL(event.stream);
-      }
+      playVideo(remoteVideo,event.stream);
     }
 
     // when remote removes a stream, remove it from the local video element
