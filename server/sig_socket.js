@@ -17,10 +17,12 @@ videoChat = io.sockets.on('connection', function(socket) {
   console.log(socket.handshake);
   console.log(socket.head);
 
+  var roomname = '';
+
   // 入室
   socket.on('enter', function(roomname) {
-    socket.set('roomname', roomname);
-    socket.join(roomname);
+      socket.roomname = roomname;
+      socket.join(roomname);
   });
 
 
@@ -45,19 +47,31 @@ videoChat = io.sockets.on('connection', function(socket) {
   socket.on('disconnect', function() {
       emitMessage('user disconnected');
   });
+  // 会議室名が指定されていたら、室内だけに通知
+  /*
+  function emitMessage(type, message) {
+    var roomname = socket.roomname;
+
+    if (roomname) {  
+        socket.broadcast.to(roomname).emit(type, message);
+    }
+    else {   
+        socket.broadcast.emit(type, message);   
+    }
+  }
+  */
 });
 
 // 会議室名が指定されていたら、室内だけに通知
 function emitMessage(type, message) {
-  var roomname;
-  socket.get('roomname', function(err, _room) {  roomname = _room;  });
+    var roomname = videoChat.roomname;
 
-  if (roomname) {  
-      socket.broadcast.to(roomname).emit(type, message);
-  }
-  else {   
-      socket.broadcast.emit(type, message);   
-  }
+    if (roomname) {  
+        videoChat.broadcast.to(roomname).emit(type, message);
+    }
+    else {   
+        videoChat.broadcast.emit(type, message);   
+    }
 }
 
 
