@@ -12,7 +12,7 @@ var io = require('socket.io')
 ,   io = io.listen(server)
 ;
 
-videoChat = io.sockets.on('connection', function(socket) {
+var videoChat = io.sockets.on('connection', function(socket) {
   console.log("connect : " + socket);
   console.log(socket.handshake);
   console.log(socket.head);
