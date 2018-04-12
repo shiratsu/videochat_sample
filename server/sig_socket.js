@@ -40,6 +40,17 @@ var videoChat = io.sockets.on('connection', function(socket) {
             }
         });
     }else{
+        message.from = socket.id;
+
+        // 送信先が指定されているか？
+        var target = message.sendto;
+        if (target) {
+            // 送信先が指定されていた場合は、その相手のみに送信
+            io.sockets.socket(target).emit('message', message);
+            return;
+        }
+
+        // 特に指定がなければ、ブロードキャスト
         emitMessage('message', message);
     }
   });
