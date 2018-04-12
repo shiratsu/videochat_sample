@@ -70,7 +70,8 @@ function emitMessage(type, message) {
         videoChat.broadcast.to(roomname).emit(type, message);
     }
     else {   
-        videoChat.broadcast.emit(type, message);   
+        //videoChat.broadcast.emit(type, message);   
+        videoChat.emit(type, message);   
     }
 }
 
